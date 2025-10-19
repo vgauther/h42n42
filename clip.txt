@@ -1,3 +1,10 @@
+root@vbox:/home/vgauther/Desktop/myapp# make
+eliomc -ppx -infer -package lwt_ppx -package js_of_ocaml-ppx_deriving_json myapp.eliom
+make: eliomc: No such file or directory
+make: *** [Makefile:153: _server/myapp.type_mli] Error 127
+
+
+
 root@vbox:/home/vgauther/Desktop/myapp# make test.byte 
 ocsigenserver  -c local/etc/myapp/myapp-test.conf
 make: ocsigenserver: No such file or directory
