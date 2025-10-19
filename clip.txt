@@ -1,3 +1,9 @@
+root@vbox:/home/vgauther/Desktop/myapp# make test.byte 
+ocsigenserver  -c local/etc/myapp/myapp-test.conf
+make: ocsigenserver: No such file or directory
+make: *** [Makefile:58: test.byte] Error 127
+
+
 Fatal error:
 In /home/vgauther/.opam/default/.opam-switch/packages/xml-light.2.5/opam:
 unsupported or missing file format version
