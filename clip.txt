@@ -1,3 +1,16 @@
+vgauther@vbox:~/Desktop/h42n42$ opam switch create 5.2.1 ocalm-compiler.5.2.1
+This version of opam requires an update to the layout of /home/vgauther/.opam
+from version 2.0 to version 2.2, which can't be reverted.
+You may want to back it up before going further.
+
+Continue? [Y/n] y
+Format upgrade done.
+Processing: [default: loading data]
+[ERROR] No compiler matching `ocalm-compiler.5.2.1' found, use `opam switch
+        list-available' to see what is available, or use `--packages' to select
+        packages explicitly.
+
+
 sudo apt install -y build-essential m4 pkg-config git curl \
   libgmp-dev libssl-dev zlib1g-dev libpcre3-dev libev-dev \
   libsqlite3-dev libffi-dev
