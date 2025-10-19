@@ -1,3 +1,7 @@
+sudo apt install -y build-essential m4 pkg-config git curl \
+  libgmp-dev libssl-dev zlib1g-dev libpcre3-dev libev-dev \
+  libsqlite3-dev libffi-dev
+
 root@vbox:/home/vgauther/Desktop/myapp# make
 eliomc -ppx -infer -package lwt_ppx -package js_of_ocaml-ppx_deriving_json myapp.eliom
 make: eliomc: No such file or directory
