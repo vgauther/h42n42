@@ -2,4 +2,7 @@ Fatal error:
 In /home/vgauther/.opam/default/.opam-switch/packages/xml-light.2.5/opam:
 unsupported or missing file format version
 
+ocsigenserver: main: Fatal - Findlib package ocsipersist-dbm-config not found: maybe you forgot <findlib path="..."/>?
+make: *** [Makefile:58: test.byte] Error 53
+
 bash -c "sh <(curl -fsSL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)"
