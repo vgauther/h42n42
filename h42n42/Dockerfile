@@ -1,26 +1,24 @@
-# Build & run the Eliom/Ocsigen project entirely inside Docker
-# Host needs only Docker. No OCaml/opam deps on your machine.
+# Étape 1 : base Debian avec OCaml et opam
+FROM ocaml/opam:debian-12
 
-# 1) Use the upstream image that already contains OCaml, opam, eliom & ocsigenserver
-FROM ocsigen/eliom:latest
-
-# 2) Workdir inside the container
+# Étape 2 : travailler dans /app
 WORKDIR /app
 
-# 3) Copy project sources
-# Put this Dockerfile at the root next to your Makefile before building.
+# Étape 3 : copier ton projet
 COPY . /app
 
-# 4) Build the project
-# - We run as the 'opam' user inside the image.
-# - We eval opam's environment before calling make.
-# - 'make all' compiles client+server; 'make install' installs into /usr/local/*
-USER opam
-RUN bash -lc 'eval $(opam env) && make clean && make all && make install'
+# Étape 4 : installer Eliom et Ocsigen via opam
+# (on installe aussi dune et make si nécessaire)
+RUN sudo apt-get update && sudo apt-get install -y m4 pkg-config libssl-dev make && \
+    opam update && \
+    opam install -y eliom ocsigenserver && \
+    eval $(opam env)
 
-# 5) Expose the HTTP port configured in etc/h42n42/h42n42.conf (currently 80)
+# Étape 5 : compiler ton projet
+RUN bash -lc "make clean && make all && make install"
+
+# Étape 6 : exposer le port HTTP
 EXPOSE 80
 
-# 6) Default command: launch ocsigenserver using the generated conf
-# You can override with: docker run ... <another command>
-CMD ["bash","-lc","eval $(opam env) && make run.byte"]
+# Étape 7 : lancer le serveur
+CMD ["bash", "-lc", "make run.byte"]
