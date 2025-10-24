@@ -3,40 +3,56 @@ FROM ocaml/opam:debian-12
 SHELL ["/bin/bash", "-lc"]
 ENV OPAMYES=1
 
-# Root pour paquets système et copie des sources
 USER root
 WORKDIR /app
 
-# Dépendances système requises par Eliom/Ocsigen et toolchain
+# Deps système (ajout de libgdbm-dev pour ocsipersist-dbm)
 RUN apt-get update && apt-get install -y \
-    m4 pkg-config make libssl-dev libgmp-dev libpcre3-dev zlib1g-dev libsqlite3-dev \
+    m4 pkg-config make libssl-dev libgmp-dev libpcre3-dev zlib1g-dev \
+    libsqlite3-dev libgdbm-dev \
  && rm -rf /var/lib/apt/lists/*
 
-# Copier le projet et donner les droits à l'utilisateur opam
+# Copier le projet
 COPY . /app
+# Donner l'app à l'utilisateur opam
 RUN chown -R opam:opam /app
 
-# Passer à l'utilisateur opam pour opam et la compilation
 USER opam
 
-# Switch OCaml 5.2.1 + deps
+# Switch OCaml 5.2.1 + deps opam (ajout ocsipersist-dbm)
 RUN opam update \
  && opam switch create 5.2.1 \
  && eval $(opam env) \
- && opam install -y dune eliom ocsigenserver
+ && opam install -y dune eliom ocsigenserver ocsipersist-dbm
 
-# Build (toujours en opam)
+# Build
 RUN eval $(opam env) && make clean && make all
 
-# Install (souvent écrit sous /usr/local -> besoin root)
+# Install (root si nécessaire)
 USER root
-RUN eval $(opam env) && make install \
- && mkdir -p /usr/local/var/log/h42n42 /usr/local/var/run/h42n42 \
- && chown -R opam:opam /usr/local/var/log/h42n42 /usr/local/var/run/h42n42 /usr/local/etc/h42n42
+RUN eval $(opam env) && make install
 
-# Exposer le port configuré par la conf Ocsigen
+# --- Rendre la conf et les répertoires utilisables par 'opam' ---
+# Dossiers de log/run sous /app (writable)
+RUN mkdir -p /app/local/var/log/h42n42 /app/local/var/run \
+ && chown -R opam:opam /app/local/var
+
+# Patcher la conf installée pour pointer vers /app/local/var/...
+# (Log dir, PID file, command_pipe) + retirer <user>/<group>
+RUN CONF="/usr/local/etc/h42n42/h42n2*.conf" ; \
+    for f in $CONF; do \
+      sed -i 's#/usr/local/var/log/h42n42#/app/local/var/log/h42n42#g' "$f"; \
+      sed -i 's#/usr/local/var/run/h42n42#/app/local/var/run/h42n42#g' "$f"; \
+      sed -i 's#/usr/local/var/run/h42n42-cmd#/app/local/var/run/h42n42-cmd#g' "$f"; \
+      # supprimer balises <user> et <group> (dépréciées)
+      sed -i '/<user>.*<\/user>/d; /<group>.*<\/group>/d' "$f"; \
+    done
+
+# Donner la conf à opam
+RUN chown -R opam:opam /usr/local/etc/h42n42
+
 EXPOSE 80
 
-# Lancer en utilisateur non-root
+# Lancer en 'opam' avec l'env opam chargé
 USER opam
 CMD ["bash","-lc","eval $(opam env) && make run.byte"]
