@@ -1,24 +1,32 @@
-# Étape 1 : base Debian avec OCaml et opam
+# Image officielle contenant OCaml + opam
 FROM ocaml/opam:debian-12
 
-# Étape 2 : travailler dans /app
-WORKDIR /app
+# Utiliser bash -lc pour charger correctement l'environnement opam
+SHELL ["/bin/bash", "-lc"]
 
-# Étape 3 : copier ton projet
+# Pas de confirmation interactive pour opam
+ENV OPAMYES=1
+
+# Dossier de travail
+WORKDIR /app
 COPY . /app
 
-# Étape 4 : installer Eliom et Ocsigen via opam
-# (on installe aussi dune et make si nécessaire)
-RUN sudo apt-get update && sudo apt-get install -y m4 pkg-config libssl-dev make && \
-    opam update && \
-    opam install -y eliom ocsigenserver && \
-    eval $(opam env)
+# Installer les dépendances système nécessaires à Ocsigen/Eliom
+RUN sudo apt-get update && sudo apt-get install -y \
+    m4 pkg-config make libssl-dev libgmp-dev libpcre3-dev zlib1g-dev libsqlite3-dev \
+ && sudo rm -rf /var/lib/apt/lists/*
 
-# Étape 5 : compiler ton projet
-RUN bash -lc "make clean && make all && make install"
+# Créer un switch OCaml 5.2.1 et installer Eliom + Ocsigenserver
+RUN opam update \
+ && opam switch create 5.2.1 \
+ && eval $(opam env) \
+ && opam install -y dune eliom ocsigenserver
 
-# Étape 6 : exposer le port HTTP
+# Compiler et installer le projet
+RUN eval $(opam env) && make clean && make all && make install
+
+# Le serveur écoute sur le port 80
 EXPOSE 80
 
-# Étape 7 : lancer le serveur
-CMD ["bash", "-lc", "make run.byte"]
+# Lancer le serveur (bytecode)
+CMD ["bash", "-lc", "eval $(opam env) && make run.byte"]
