@@ -1,32 +1,40 @@
-# Image officielle contenant OCaml + opam
 FROM ocaml/opam:debian-12
 
-# Utiliser bash -lc pour charger correctement l'environnement opam
 SHELL ["/bin/bash", "-lc"]
-
-# Pas de confirmation interactive pour opam
 ENV OPAMYES=1
 
-# Dossier de travail
+# On passe root pour installer les paquets et copier les sources
+USER root
 WORKDIR /app
-COPY . /app
 
-# Installer les dépendances système nécessaires à Ocsigen/Eliom
-RUN sudo apt-get update && sudo apt-get install -y \
+# Dépendances système
+RUN apt-get update && apt-get install -y \
     m4 pkg-config make libssl-dev libgmp-dev libpcre3-dev zlib1g-dev libsqlite3-dev \
- && sudo rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
-# Créer un switch OCaml 5.2.1 et installer Eliom + Ocsigenserver
+# Copier le projet puis donner les droits à l'user opam
+COPY . /app
+RUN chown -R opam:opam /app
+
+# Revenir à l'utilisateur opam pour opam + build
+USER opam
+
+# Créer le switch 5.2.1 et installer les deps
 RUN opam update \
  && opam switch create 5.2.1 \
  && eval $(opam env) \
  && opam install -y dune eliom ocsigenserver
 
-# Compiler et installer le projet
-RUN eval $(opam env) && make clean && make all && make install
+# Build (en user opam)
+RUN eval $(opam env) && make clean && make all
 
-# Le serveur écoute sur le port 80
+# Install (souvent écrit dans /usr/local -> besoin root)
+USER root
+RUN eval $(opam env) && make install
+
+# Exposition du port
 EXPOSE 80
 
-# Lancer le serveur (bytecode)
+# Revenir en opam pour lancer
+USER opam
 CMD ["bash", "-lc", "eval $(opam env) && make run.byte"]
