@@ -6,7 +6,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     build-essential m4 pkg-config git curl ca-certificates rsync unzip make \
     libgmp-dev libssl-dev libffi-dev zlib1g-dev \
     libpcre3-dev libsqlite3-dev \
-    xz-utils bzip2 patch perl \
+    xz-utils bzip2 patch perl gnupg tar \
  && rm -rf /var/lib/apt/lists/*
 
 # opam binaire
@@ -21,36 +21,43 @@ RUN useradd -m -u ${UID} -s /bin/bash ${USER}
 USER ${USER}
 WORKDIR /home/${USER}
 
-# opam en non-interactif + sans sandbox dans Docker
-ENV OPAMYES=1 OPAMNOAUTORUN=1
+# Env opam non-interactif + pas de sandbox dans Docker
+# Réduction du parallélisme pour éviter les OOM lors de la création du switch
+ENV OPAMYES=1 OPAMNOAUTORUN=1 OPAMJOBS=1 MAKEFLAGS=-j1
 
-# Utiliser bash pour les RUN suivants
+# Utiliser bash pour les RUN
 SHELL ["/bin/bash","-lc"]
 
-# Init opam + update + switch OCaml 5.2.1
-RUN opam init --disable-sandboxing -a \
- && opam update \
- && opam switch create 5.2.1 ocaml-base-compiler.5.2.1
+# Init opam + forcer le repo par défaut
+RUN opam init --disable-sandboxing -a --bare \
+ && opam repository set-url default https://opam.ocaml.org \
+ && opam update
 
-# Outils OCaml
-RUN eval "$(opam env)" && opam install dune opam-depext
+# Créer le switch OCaml 5.2.1 (verbose + mono-job)
+RUN opam switch create 5.2.1 ocaml-base-compiler.5.2.1 -j 1 --verbose
 
-# ocsigenserver + eliom (avec depexts)
-RUN eval "$(opam env)" && opam depext -uiv ocsigenserver eliom && opam install ocsigenserver eliom
+# Installer les outils OCaml
+RUN eval "$(opam env --switch=5.2.1)" \
+ && opam install -y dune opam-depext
+
+# Installer ocsigenserver + eliom (+ depexts)
+RUN eval "$(opam env --switch=5.2.1)" \
+ && opam depext -uiv ocsigenserver eliom \
+ && opam install -y ocsigenserver eliom
 
 # Projet
 WORKDIR /app
 COPY --chown=${USER}:${USER} . /app
 
 # Dépendances du projet si présentes
-RUN eval "$(opam env)" \
+RUN eval "$(opam env --switch=5.2.1)" \
  && if compgen -G "*.opam" > /dev/null; then \
       opam depext -uiv . || true; \
-      opam install . --deps-only || true; \
+      opam install -y . --deps-only || true; \
     elif [ -f "dune-project" ]; then \
       opam pin add -n . || true; \
       opam depext -uiv . || true; \
-      opam install . --deps-only || true; \
+      opam install -y . --deps-only || true; \
     else \
       echo "Aucun .opam / dune-project — on passe."; \
     fi
