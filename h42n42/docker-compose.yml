@@ -1,6 +1,1 @@
-services:
-  h42n42:
-    build: .
-    container_name: h42n42
-    ports:
-      - "8080:80"
+
