@@ -3,7 +3,7 @@ FROM debian:11-slim
 
 # ---- Installer les dépendances système ----
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    build-essential m4 pkg-config git curl ca-certificates rsync unzip \
+    build-essential m4 pkg-config git curl ca-certificates rsync unzip make \
     libgmp-dev libssl-dev libffi-dev zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
@@ -20,7 +20,7 @@ RUN useradd -m -u ${UID} -s /bin/bash ${USER}
 USER ${USER}
 WORKDIR /home/${USER}
 
-# Variables d’environnement pour opam
+# ---- Configurer opam ----
 ENV OPAMYES=1
 ENV OPAMNOAUTORUN=1
 
@@ -34,7 +34,7 @@ RUN opam switch create 5.2.1 ocaml-base-compiler.5.2.1
 SHELL ["/bin/bash", "-lc"]
 RUN eval "$(opam env)" && opam install dune
 
-# ---- Copier ton application ----
+# ---- Copier le projet ----
 WORKDIR /app
 COPY --chown=${USER}:${USER} . /app
 
@@ -49,11 +49,8 @@ RUN eval "$(opam env)" \
        echo "Aucun fichier .opam ni dune-project trouvé — dépendances ignorées."; \
      fi
 
-# ---- Variable par défaut pour la commande du serveur ----
-ENV APP_CMD="opam exec -- ocaml -vnum"
-
-# ---- Exposer le port du serveur ----
+# ---- Exposer le port (si ton test lance un serveur) ----
 EXPOSE 8080
 
-# ---- Entrypoint inline (aucun fichier .sh nécessaire) ----
-ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(opam env --switch=5.2.1)\" && exec $APP_CMD"]
+# ---- Lancer automatiquement make test.byte ----
+ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(opam env --switch=5.2.1)\" && make test.byte"]
