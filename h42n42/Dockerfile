@@ -1,18 +1,18 @@
 # ---- Base : Debian 11 ----
 FROM debian:11-slim
 
-# ---- Install system deps ----
+# ---- Installer les dépendances système ----
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential m4 pkg-config git curl ca-certificates rsync unzip \
     libgmp-dev libssl-dev libffi-dev zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# ---- Install opam ----
+# ---- Installer opam ----
 ARG OPAM_VERSION=2.2.1
 RUN curl -fsSL -o /usr/local/bin/opam "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/opam-${OPAM_VERSION}-x86_64-linux" \
   && chmod +x /usr/local/bin/opam
 
-# ---- Create non-root user ----
+# ---- Créer un utilisateur non-root ----
 ARG USER=opam
 ARG UID=1000
 RUN useradd -m -u ${UID} -s /bin/bash ${USER}
@@ -20,21 +20,25 @@ RUN useradd -m -u ${UID} -s /bin/bash ${USER}
 USER ${USER}
 WORKDIR /home/${USER}
 
+# Variables d’environnement pour opam
 ENV OPAMYES=1
 ENV OPAMNOAUTORUN=1
 
-# ---- Initialize opam ----
+# ---- Initialiser opam ----
 RUN opam init --disable-sandboxing -a
 
-# ---- Create OCaml 5.2.1 switch ----
+# ---- Créer le switch OCaml 5.2.1 ----
 RUN opam switch create 5.2.1 ocaml-base-compiler.5.2.1
 
-# ---- Prepare app directory ----
+# ---- Installer dune ----
+SHELL ["/bin/bash", "-lc"]
+RUN eval "$(opam env)" && opam install dune
+
+# ---- Copier ton application ----
 WORKDIR /app
 COPY --chown=${USER}:${USER} . /app
 
-# ---- Install opam dependencies if available ----
-SHELL ["/bin/bash", "-lc"]
+# ---- Installer les dépendances du projet si présentes ----
 RUN eval "$(opam env)" \
   && if compgen -G "*.opam" > /dev/null; then \
        opam install . --deps-only; \
@@ -42,11 +46,14 @@ RUN eval "$(opam env)" \
        opam pin add -n . || true; \
        opam install . --deps-only || true; \
      else \
-       echo "No opam or dune-project file found; skipping dep install."; \
+       echo "Aucun fichier .opam ni dune-project trouvé — dépendances ignorées."; \
      fi
 
-# ---- Default command ----
+# ---- Variable par défaut pour la commande du serveur ----
 ENV APP_CMD="opam exec -- ocaml -vnum"
 
-# ---- Inline entrypoint (no .sh file needed) ----
+# ---- Exposer le port du serveur ----
+EXPOSE 8080
+
+# ---- Entrypoint inline (aucun fichier .sh nécessaire) ----
 ENTRYPOINT ["/bin/bash", "-lc", "eval \"$(opam env --switch=5.2.1)\" && exec $APP_CMD"]
