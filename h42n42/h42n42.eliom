@@ -21,12 +21,11 @@ let () =
   Eliom_registration.Html.register
     ~service:main_service
     (fun () ->
-       let msg = span ~a:[a_id "msg"] [pcdata message_from_ocaml] in
+       let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
        Lwt.return
          (html
-            (head (title (pcdata "H42N42 — Demo couleur")) [css_link])
-            (body [div ~a:[a_class ["container"]] [msg]]))
-         )
+            (head (title (txt "H42N42 — Demo couleur")) [css_link])
+            (body [div ~a:[a_class ["container"]] [msg]]))))
 
 (* --------- Code client (JS) --------- *)
 let%client _ =
