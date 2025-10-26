@@ -17,16 +17,19 @@ let main_service =
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
+(* La page (retourne un Html.page Lwt.t) *)
+let page () =
+  let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
+  Lwt.return
+    (html
+       (head (title (txt "H42N42 — Demo couleur")) [css_link])
+       (body [div ~a:[a_class ["container"]] [msg]]))
+
+(* Enregistrement du service *)
 let () =
   Eliom_registration.Html.register
     ~service:main_service
-    (fun () ->
-       let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
-       Lwt.return
-         (html
-            (head (title (txt "H42N42 — Demo couleur")) [css_link])
-            (body [div ~a:[a_class ["container"]] [msg]]))
-    )
+    page
 
 (* --------- Code client (JS) --------- *)
 let%client _ =
