@@ -17,7 +17,7 @@ let main_service =
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
-(* La page (signature attendue: unit -> unit -> Html.page Lwt.t) *)
+(* La page *)
 let page () () =
   let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
   Lwt.return
@@ -34,9 +34,10 @@ let () =
 (* --------- Code client (JS) --------- *)
 let%client _ =
   let open Js_of_ocaml in
+  let open Js_of_ocaml_lwt in
   let elt = Dom_html.getElementById_exn "msg" in
   Lwt.async (fun () ->
-    Lwt_js_events.clicks elt (fun _evt _target ->
+    Lwt_js_events.clicks elt (fun _ev ->
       ignore (elt##.classList##toggle (Js.string "alt"));
       Lwt.return_unit));
   Lwt.return_unit
