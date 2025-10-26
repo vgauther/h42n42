@@ -26,7 +26,7 @@ let () =
             ~title:"h42n42"
             ~css:[["css";"h42n42.css"]]
             Html.F.(body [
-              h1 [txt "Welcome from Eliom's distillery!"];
+              h1 [txt "h42n42"];
               div ~a:[ a_class["gameboard"]] [
                 div ~a:[a_class ["river"]] [];
               ];
