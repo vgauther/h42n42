@@ -15,7 +15,7 @@ let css_link =
 let main_service =
   Eliom_service.create
     ~path:(Eliom_service.Path [])
-    ~meth:(Eliom_service.Get ())
+    ~meth:(Eliom_service.Get Eliom_parameter.unit)
 
 (* --------- Page HTML --------- *)
 let page () () =
@@ -44,13 +44,15 @@ let%client _ =
   Lwt.async (fun () ->
     (* Attendre que le DOM soit prêt *)
     let%lwt _ = Lwt_js_events.onload () in
-    (* Logs défensifs : ignorer si Firebug/console absent *)
+
+    (* Helpers logs (protégés si console absente) *)
     let log s =
       try Firebug.console##log (Js.string s) with _ -> ()
     in
     let error s =
       try Firebug.console##error (Js.string s) with _ -> ()
     in
+
     log "[h42n42] JS chargé : onload OK";
     match Dom_html.getElementById_opt "msg" with
     | None ->
