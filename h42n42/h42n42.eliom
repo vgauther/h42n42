@@ -5,6 +5,7 @@ open Eliom_content.Html.D
 let message_from_ocaml =
   "Bonjour 👋 — clique sur ce texte pour changer la couleur !"
 
+(* --------- Lien CSS (servi à la racine via <static dir=...>) --------- *)
 let css_link =
   link ~rel:[`Stylesheet]
        ~href:(Xml.uri_of_string "/css/h42n42.css")
@@ -14,18 +15,23 @@ let css_link =
 let main_service =
   Eliom_service.create
     ~path:(Eliom_service.Path [])
-    ~meth:(Eliom_service.Get Eliom_parameter.unit)
-    ()
+    ~meth:(Eliom_service.Get ())
 
-(* La page *)
+(* --------- Page HTML --------- *)
 let page () () =
   let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
   Lwt.return
     (html
-       (head (title (txt "H42N42 — Demo couleur")) [css_link])
+       (head
+          (title (txt "H42N42 — Demo couleur"))
+          [
+            css_link;
+            (* IMPORTANT : inclure le JS généré côté client *)
+            Eliom_content.Html.D.client_script ();
+          ])
        (body [div ~a:[a_class ["container"]] [msg]]))
 
-(* Enregistrement du service *)
+(* --------- Enregistrement du service --------- *)
 let () =
   Eliom_registration.Html.register
     ~service:main_service
@@ -36,18 +42,25 @@ let%client _ =
   let open Js_of_ocaml in
   let open Js_of_ocaml_lwt in
   Lwt.async (fun () ->
+    (* Attendre que le DOM soit prêt *)
     let%lwt _ = Lwt_js_events.onload () in
-    Firebug.console##log (Js.string "[h42n42] JS chargé : onload OK");
+    (* Logs défensifs : ignorer si Firebug/console absent *)
+    let log s =
+      try Firebug.console##log (Js.string s) with _ -> ()
+    in
+    let error s =
+      try Firebug.console##error (Js.string s) with _ -> ()
+    in
+    log "[h42n42] JS chargé : onload OK";
     match Dom_html.getElementById_opt "msg" with
     | None ->
-        Firebug.console##error (Js.string "[h42n42] Élément #msg introuvable");
+        error "[h42n42] Élément #msg introuvable";
         Lwt.return_unit
     | Some elt ->
-        Firebug.console##log (Js.string "[h42n42] Handler cliqué attaché à #msg");
+        log "[h42n42] Handler cliqué attaché à #msg";
         Lwt_js_events.clicks elt (fun _ev _target ->
-          Firebug.console##log (Js.string "[h42n42] Click détecté sur #msg → toggle .alt");
+          log "[h42n42] Click détecté sur #msg → toggle .alt";
           ignore (elt##.classList##toggle (Js.string "alt"));
           Lwt.return_unit)
   );
   Lwt.return_unit
-
