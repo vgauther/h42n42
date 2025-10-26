@@ -25,7 +25,7 @@ let () =
        Lwt.return
          (html
             (head (title (txt "H42N42 — Demo couleur")) [css_link])
-            (body [div ~a:[a_class ["container"]] [msg]]))))
+            (body [div ~a:[a_class ["container"]] [msg]]))
 
 (* --------- Code client (JS) --------- *)
 let%client _ =
