@@ -11,3 +11,43 @@
 .river {
   background: blue;
 }
+
+* {
+    font-family: sans-serif;
+}
+
+body {
+    margin: unset;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.gameboard {
+    height: 700px;
+    width: 1000px;
+    background-color: #f0f0f0;
+
+    /* Hospital */
+    border-bottom-style: dashed;
+    border-bottom-color: coral;
+}
+
+.river {
+    height: 50px;
+    background-color: #4ab3b4;
+}
+
+.playground {
+    height: 650px;
+}
+
+.creet {
+    border-radius: 50%;
+    display: inline-block;
+    position: absolute;
+    cursor: grab;
+}
+
+.creets-counter {
+    padding: 15px;
+}
