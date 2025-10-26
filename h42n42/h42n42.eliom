@@ -43,3 +43,28 @@ let () =
     mutable left : float;
     mutable state: creet_state;
   }
+
+  let create global_speed =
+    let elt = div ~a:[ a_class [ "creet" ] ] [] in
+    let creet =
+      {
+        elt;
+        top = 0.;
+        left = 0.;
+        state = Healthy;
+      }
+  creet
+
+
+  let _add_creet playground =
+    let creet = Creet.create playground.global_speed in
+    Html.Manip.appendChild ~%elt creet.elt;
+    playground.creets <- creet :: playground.creets;
+
+  let play () =
+    let playground =
+      { global_speed = ref 0.; creets = [] }
+    in
+    for _ 1 to 3 do
+      _add_creet playground
+    done;
