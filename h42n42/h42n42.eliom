@@ -1,5 +1,5 @@
 (* h42n42/h42n42.eliom *)
-open Eliom_content.Html.D
+open Eliom_content.Html5.D
 
 (* --------- Données côté serveur --------- *)
 let message_from_ocaml =
@@ -33,7 +33,7 @@ let page () () =
 
 (* --------- Enregistrement du service --------- *)
 let () =
-  Eliom_registration.Html.register
+  Eliom_registration.Html5.register
     ~service:main_service
     page
 
