@@ -1,14 +1,9 @@
-/* h42n42/static/css/app.css */
+/* h42n42/static/css/h42n42.css */
 #msg {
   cursor: pointer;
-  color: #1f2937;            /* gris foncé */
+  color: #1f2937;
   font: 600 22px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   transition: color .2s ease;
 }
-#msg.alt {
-  color: #d97706;            /* orange */
-}
-.container {
-  max-width: 720px;
-  margin: 40px auto;
-}
+#msg.alt { color: #d97706; }
+.container { max-width: 720px; margin: 40px auto; }
