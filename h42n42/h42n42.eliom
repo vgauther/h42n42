@@ -29,5 +29,7 @@ let () =
               h1 [txt "h42n42"];
               div ~a:[ a_class["gameboard"]] [
                 div ~a:[a_class ["river"]] [];
+                div ~a:[ a_class [ "playground" ] ] [];
+                div ~a:[ a_class [ "hospital" ] ] []
               ];
             ])))
