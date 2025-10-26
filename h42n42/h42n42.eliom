@@ -1,74 +1,60 @@
 (* h42n42/h42n42.eliom *)
-
 open Eliom_content.Html.D
 
-(* ---------- Déclaration de l'application HTML ---------- *)
-module App = Eliom_registration.Html.App(struct
-  let application_name = "h42n42"
-  let global_data_path = None
-end)
-
-(* ---------- Données côté serveur ---------- *)
-let message_from_ocaml =
-  "Bonjour 👋 — clique sur ce texte pour changer la couleur !"
-
-(* Lien CSS : servi à la racine via <static dir=...> *)
-let css_link =
-  link ~rel:[`Stylesheet]
-       ~href:(Xml.uri_of_string "/css/h42n42.css")
-       ()
-
-(* ---------- Service principal ("/") ---------- *)
-let main_service =
+(* --- Service racine ("/") --- *)
+(* Annotation de type pour satisfaire Eliom_registration.Html.register *)
+let main_service :
+  (unit, unit, Eliom_service.get, Eliom_service.att,
+   Eliom_service.non_co, Eliom_service.non_ext, Eliom_service.reg,
+   [ `WithoutSuffix ], unit, unit, Eliom_registration.Html.return) Eliom_service.t
+  =
   Eliom_service.create
     ~path:(Eliom_service.Path [])
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
 
-(* ---------- Page HTML ---------- *)
+(* --- Page HTML --- *)
 let page () () =
-  let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
+  let msg = span ~a:[a_id "msg"] [txt "Bonjour 👋 — clique sur ce texte !"] in
   Lwt.return
     (html
        (head
-          (title (txt "H42N42 — Demo couleur"))
+          (title (txt "Test Eliom + js_of_ocaml + Lwt"))
           [
-            css_link;
-            (* Inclure le JS client généré *)
-            script ~a:[a_src (Xml.uri_of_string "/eliom/h42n42.js")] (txt "");
+            (* CSS servi depuis le <static dir="..."> → racine *)
+            link ~rel:[`Stylesheet] ~href (Xml.uri_of_string "/css/h42n42.css") ();
+
+            (* IMPORTANT : inclure le JS client généré par js_of_ocaml *)
+            script ~a:[a_defer (); a_src (Xml.uri_of_string "/eliom/h42n42.js")] (txt "");
           ])
        (body [div ~a:[a_class ["container"]] [msg]]))
 
-(* ---------- Enregistrement du service via App ---------- *)
+(* --- Enregistrement du service --- *)
 let () =
-  App.register
+  Eliom_registration.Html.register
     ~service:main_service
     page
 
-(* ---------- Code client (JS) ---------- *)
+(* --- Code client (js_of_ocaml + Lwt) --- *)
 let%client _ =
   let open Js_of_ocaml in
   let open Js_of_ocaml_lwt in
   Lwt.async (fun () ->
-    (* Attendre que le DOM soit prêt *)
+    (* Attendre le DOM prêt *)
     let%lwt _ = Lwt_js_events.onload () in
 
     (* Logs protégés si console absente *)
-    let log s =
-      try Firebug.console##log (Js.string s) with _ -> ()
-    in
-    let error s =
-      try Firebug.console##error (Js.string s) with _ -> ()
-    in
+    let log s = try Firebug.console##log (Js.string s) with _ -> () in
+    let err s = try Firebug.console##error (Js.string s) with _ -> () in
 
-    log "[h42n42] JS chargé : onload OK";
+    log "[h42n42] JS chargé (onload OK)";
     match Dom_html.getElementById_opt "msg" with
     | None ->
-        error "[h42n42] Élément #msg introuvable";
+        err "[h42n42] Élément #msg introuvable";
         Lwt.return_unit
     | Some elt ->
-        log "[h42n42] Handler cliqué attaché à #msg";
+        log "[h42n42] Attache du handler sur #msg";
         Lwt_js_events.clicks elt (fun _ev _target ->
-          log "[h42n42] Click détecté sur #msg → toggle .alt";
+          log "[h42n42] Clic → toggle .alt";
           ignore (elt##.classList##toggle (Js.string "alt"));
           Lwt.return_unit)
   );
