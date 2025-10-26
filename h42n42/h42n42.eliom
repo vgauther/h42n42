@@ -35,9 +35,12 @@ let () =
 let%client _ =
   let open Js_of_ocaml in
   let open Js_of_ocaml_lwt in
-  let elt = Dom_html.getElementById_exn "msg" in
   Lwt.async (fun () ->
+    let%lwt _ = Lwt_js_events.onload () in      (* attend que le DOM soit prêt *)
+    let elt = Dom_html.getElementById_exn "msg" in
     Lwt_js_events.clicks elt (fun _ev _target ->
       ignore (elt##.classList##toggle (Js.string "alt"));
-      Lwt.return_unit));
+      Lwt.return_unit)
+  );
   Lwt.return_unit
+
