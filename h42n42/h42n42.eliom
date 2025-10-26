@@ -11,15 +11,21 @@ let css_link =
 
 (* --------- Service principal --------- *)
 let main_service =
+  Eliom_service.create
+    ~path:(Eliom_service.Path [])                (* "/" *)
+    ~meth:(Eliom_service.Get Eliom_parameter.unit)
+    ()
+
+let () =
   Eliom_registration.Html.register
-    ~path:[]
-    ~get_params:Eliom_parameter.unit
+    ~service:main_service
     (fun () ->
-      let msg = span ~a:[a_id "msg"] [pcdata message_from_ocaml] in
-      Lwt.return
-        (html
-           (head (title (pcdata "H42N42 — Demo couleur")) [css_link])
-           (body [div ~a:[a_class ["container"]] [msg]])))
+       let msg = span ~a:[a_id "msg"] [pcdata message_from_ocaml] in
+       Lwt.return
+         (html
+            (head (title (pcdata "H42N42 — Demo couleur")) [css_link])
+            (body [div ~a:[a_class ["container"]] [msg]]))))
+
 
 (* --------- Code client --------- *)
 let%client _ =
