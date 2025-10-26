@@ -7,7 +7,7 @@ let message_from_ocaml =
 
 let css_link =
   link ~rel:[`Stylesheet]
-       ~href:(Xml.uri_of_string "/h42n42/static/css/h42n42.css")
+       ~href:(Xml.uri_of_string "/css/h42n42.css")
        ()
 
 (* --------- Service principal ("/") --------- *)
