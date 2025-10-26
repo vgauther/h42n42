@@ -26,8 +26,8 @@ let page () () =
           (title (txt "H42N42 — Demo couleur"))
           [
             css_link;
-            (* IMPORTANT : inclure le JS généré côté client *)
-            Eliom_content.Html.D.client_script ();
+            (* Inclure le JS client généré par Eliom/Js_of_ocaml *)
+            script ~a:[a_src (Xml.uri_of_string "/eliom/h42n42.js")] (txt "");
           ])
        (body [div ~a:[a_class ["container"]] [msg]]))
 
