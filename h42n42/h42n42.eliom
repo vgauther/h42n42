@@ -1,5 +1,5 @@
 (* h42n42/h42n42.eliom *)
-open Eliom_content.Html5.D
+open Eliom_content.Html.D
 
 (* --------- Données côté serveur --------- *)
 let message_from_ocaml =
