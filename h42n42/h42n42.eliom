@@ -1,30 +1,34 @@
-[%%shared
-open Eliom_lib
-open Eliom_content
-open Html.D
-]
+(* h42n42/h42n42.eliom *)
+open Eliom_content.Html5.D
 
-module H42n42_app =
-  Eliom_registration.App (
-  struct
-    let application_name = "h42n42"
-    let global_data_path = None
-  end)
+(* --------- Données côté serveur (le texte vient d'OCaml) --------- *)
+let message_from_ocaml = "Bonjour 👋 — clique sur ce texte pour changer la couleur !"
 
+(* Petit helper pour lier notre CSS statique *)
+let css_link =
+  link ~rel:[`Stylesheet]
+       ~href:(Xml.uri_of_string "/h42n42/static/css/app.css")
+       ()
+
+(* --------- Service principal (HTML généré côté serveur) --------- *)
 let main_service =
-  Eliom_service.create
-    ~path:(Eliom_service.Path [])
-    ~meth:(Eliom_service.Get Eliom_parameter.unit)
-    ()
+  Eliom_registration.Html5.register
+    ~path:[]
+    ~get_params:Eliom_parameter.unit
+    (fun () ->
+      let msg = span ~a:[a_id "msg"] [pcdata message_from_ocaml] in
+      Lwt.return
+        (html
+           (head (title (pcdata "H42N42 — Demo couleur")) [css_link])
+           (body [div ~a:[a_class ["container"]] [msg]])))
 
-let () =
-  H42n42_app.register
-    ~service:main_service
-    (fun () () ->
-       Lwt.return
-         (Eliom_tools.F.html
-            ~title:"h42n42"
-            ~css:[["css";"h42n42.css"]]
-            Html.F.(body [
-              h1 [txt "Welcome from Eliom's distillery!"];
-            ])))
+(* --------- Code client : écoute le clic et toggle une classe CSS --------- *)
+let%client _ =
+  let open Js_of_ocaml in
+  let elt = Dom_html.getElementById_exn "msg" in
+  (* on branche un handler de clic en Lwt *)
+  Lwt.async (fun () ->
+      Lwt_js_events.clicks elt (fun _evt _target ->
+          ignore (elt##.classList##toggle (Js.string "alt"));
+          Lwt.return_unit));
+  Lwt.return_unit
