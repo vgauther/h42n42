@@ -2,17 +2,18 @@
 open Eliom_content.Html.D
 
 (* --------- Données côté serveur --------- *)
-let message_from_ocaml = "Bonjour 👋 — clique sur ce texte pour changer la couleur !"
+let message_from_ocaml =
+  "Bonjour 👋 — clique sur ce texte pour changer la couleur !"
 
 let css_link =
   link ~rel:[`Stylesheet]
        ~href:(Xml.uri_of_string "/h42n42/static/css/app.css")
        ()
 
-(* --------- Service principal --------- *)
+(* --------- Service principal ("/") --------- *)
 let main_service =
   Eliom_service.create
-    ~path:(Eliom_service.Path [])                (* "/" *)
+    ~path:(Eliom_service.Path [])
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
@@ -24,15 +25,15 @@ let () =
        Lwt.return
          (html
             (head (title (pcdata "H42N42 — Demo couleur")) [css_link])
-            (body [div ~a:[a_class ["container"]] [msg]]))))
+            (body [div ~a:[a_class ["container"]] [msg]]))
+         )
 
-
-(* --------- Code client --------- *)
+(* --------- Code client (JS) --------- *)
 let%client _ =
   let open Js_of_ocaml in
   let elt = Dom_html.getElementById_exn "msg" in
   Lwt.async (fun () ->
-      Lwt_js_events.clicks elt (fun _evt _target ->
-          ignore (elt##.classList##toggle (Js.string "alt"));
-          Lwt.return_unit));
+    Lwt_js_events.clicks elt (fun _evt _target ->
+      ignore (elt##.classList##toggle (Js.string "alt"));
+      Lwt.return_unit));
   Lwt.return_unit
