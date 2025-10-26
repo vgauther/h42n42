@@ -26,14 +26,14 @@ let page () () =
           (title (txt "H42N42 — Demo couleur"))
           [
             css_link;
-            (* Inclure le JS client généré par Eliom/Js_of_ocaml *)
+            (* Inclure le JS client généré par Js_of_ocaml/Eliom *)
             script ~a:[a_src (Xml.uri_of_string "/eliom/h42n42.js")] (txt "");
           ])
        (body [div ~a:[a_class ["container"]] [msg]]))
 
 (* --------- Enregistrement du service --------- *)
 let () =
-  Eliom_registration.Html5.register
+  Eliom_registration.Html.register
     ~service:main_service
     page
 
