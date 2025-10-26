@@ -36,11 +36,18 @@ let%client _ =
   let open Js_of_ocaml in
   let open Js_of_ocaml_lwt in
   Lwt.async (fun () ->
-    let%lwt _ = Lwt_js_events.onload () in      (* attend que le DOM soit prêt *)
-    let elt = Dom_html.getElementById_exn "msg" in
-    Lwt_js_events.clicks elt (fun _ev _target ->
-      ignore (elt##.classList##toggle (Js.string "alt"));
-      Lwt.return_unit)
+    let%lwt _ = Lwt_js_events.onload () in
+    Firebug.console##log (Js.string "[h42n42] JS chargé : onload OK");
+    match Dom_html.getElementById_opt "msg" with
+    | None ->
+        Firebug.console##error (Js.string "[h42n42] Élément #msg introuvable");
+        Lwt.return_unit
+    | Some elt ->
+        Firebug.console##log (Js.string "[h42n42] Handler cliqué attaché à #msg");
+        Lwt_js_events.clicks elt (fun _ev _target ->
+          Firebug.console##log (Js.string "[h42n42] Click détecté sur #msg → toggle .alt");
+          ignore (elt##.classList##toggle (Js.string "alt"));
+          Lwt.return_unit)
   );
   Lwt.return_unit
 
