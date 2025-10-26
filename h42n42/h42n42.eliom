@@ -2,8 +2,8 @@
 
 open Eliom_content.Html.D
 
-(* ---------- Déclaration de l'application ---------- *)
-module App = Eliom_registration.App(struct
+(* ---------- Déclaration de l'application HTML ---------- *)
+module App = Eliom_registration.Html.App(struct
   let application_name = "h42n42"
   let global_data_path = None
 end)
