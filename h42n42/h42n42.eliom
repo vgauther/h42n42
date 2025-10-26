@@ -30,6 +30,6 @@ let () =
               div ~a:[ a_class["gameboard"]] [
                 div ~a:[a_class ["river"]] [];
                 div ~a:[ a_class [ "playground" ] ] [];
-                div ~a:[ a_class [ "hospital" ] ] []
+                div ~a:[ a_class [ "hospital" ] ] [];
               ];
             ])))
