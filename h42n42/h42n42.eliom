@@ -17,8 +17,8 @@ let main_service =
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
-(* La page (retourne un Html.page Lwt.t) *)
-let page () =
+(* La page (signature attendue: unit -> unit -> Html.page Lwt.t) *)
+let page () () =
   let msg = span ~a:[a_id "msg"] [txt message_from_ocaml] in
   Lwt.return
     (html
