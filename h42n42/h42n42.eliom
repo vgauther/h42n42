@@ -33,3 +33,13 @@ let () =
                 div ~a:[ a_class [ "hospital" ] ] [];
               ];
             ])))
+
+  type creet_state = Healthy | Sick | Berserk | Mean
+
+  type creet = {
+    elt : Html_types.div elt;
+    mutable speed : float;
+    mutable top : float;
+    mutable left : float;
+    mutable state: creet_state;
+  }
