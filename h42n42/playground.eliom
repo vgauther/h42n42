@@ -15,10 +15,12 @@ type creet = {
   mutable left : float;
   mutable state : creet_state;
 }
-(**)]
+]
 
 [%%client
 open Js_of_ocaml
+open Eliom_content
+open Html.D
 
 module Creet = struct
   let create (_global_speed : float ref) : creet =
@@ -34,13 +36,11 @@ type playground_state = {
 
 let _add_creet (pg : playground_state) =
   let c = Creet.create pg.global_speed in
-  Html.Manip.appendChild ~%elt c.elt;   (* ~% OK car on est en [%client] *)
-  pg.creets <- c :: pg.creets;
-
+  Html.Manip.appendChild ~%elt c.elt;   (* OK : dans [%client] *)
+  pg.creets <- c :: pg.creets
 
 let play () =
   Random.self_init ();
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
   for _ = 1 to 3 do _add_creet pg done
-
-(**)]
+]
