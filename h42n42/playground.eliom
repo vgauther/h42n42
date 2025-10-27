@@ -1,4 +1,4 @@
-[%%shared]
+[%%shared
 open Eliom_lib
 open Eliom_content
 open Html.D
@@ -15,6 +15,7 @@ type creet = {
   mutable left : float;
   mutable state : creet_state;
 }
+]
 
 [%%client
 open Js_of_ocaml
