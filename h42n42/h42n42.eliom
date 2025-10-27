@@ -53,8 +53,7 @@ let () =
         left = 0.;
         state = Healthy;
       }
-  creet
-
+    creet
 
   let _add_creet playground =
     let creet = Creet.create playground.global_speed in
