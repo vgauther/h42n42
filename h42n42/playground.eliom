@@ -36,13 +36,16 @@ type playground_state = {
 
 let _add_creet (pg : playground_state) =
   let c = Creet.create pg.global_speed in
-  Html.Manip.appendChild ~%elt c.elt;   (* OK : dans [%client] *)
-  pg.creets <- c :: pg.creets;          (* ← ici, il manquait un ; *)
-  Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "creet ajouté");
-
+  (* On ouvre un bloc explicite pour éviter toute ambiguïté *)
+  begin
+    Html.Manip.appendChild ~%elt c.elt;
+    pg.creets <- c :: pg.creets;
+    Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "creet ajouté");
+  end
 
 let play () =
   Random.self_init ();
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
-  for _ = 1 to 3 do _add_creet pg done
+  for _ = 1 to 3 do _add_creet pg done;
+  Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "play lancé");
 ]
