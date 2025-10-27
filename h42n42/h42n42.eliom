@@ -19,6 +19,11 @@ let main_service =
     ()
 
 (* -------------------------- *)
+(* Conteneur partagé du terrain *)
+(* -------------------------- *)
+let playground_elt = div ~a:[ a_class ["playground"] ] []
+
+(* -------------------------- *)
 (* Types de jeu               *)
 (* -------------------------- *)
 type creet_state = Healthy | Sick | Berserk | Mean
@@ -35,7 +40,7 @@ type creet = {
 (* Module Creet               *)
 (* -------------------------- *)
 module Creet = struct
-  let create global_speed =
+  let create (_global_speed : float ref) =
     let elt = div ~a:[ a_class [ "creet" ] ] [] in
     let creet = {
       elt;
@@ -60,14 +65,16 @@ type playground = {
 (* -------------------------- *)
 [%%client]
 
-let _add_creet playground =
-  let creet = Creet.create playground.global_speed in
-  playground.creets <- creet :: playground.creets
+let _add_creet (pg: playground) =
+  let c = Creet.create pg.global_speed in
+  Html.Manip.appendChild ~%playground_elt c.elt;  (* ← insertion visuelle *)
+  pg.creets <- c :: pg.creets
 
 let play () =
-  let playground = { global_speed = ref 0.; creets = [] } in
+  Random.self_init ();
+  let pg = { global_speed = ref 0.; creets = [] } in
   for _ = 1 to 3 do
-    _add_creet playground
+    _add_creet pg
   done
 
 (* -------------------------- *)
@@ -75,19 +82,24 @@ let play () =
 (* -------------------------- *)
 [%%server]
 
+let page =
+  Html.F.(body [
+    h1 [txt "h42n42"];
+    div ~a:[ a_class ["gameboard"]] [
+      div ~a:[ a_class ["river"] ] [];
+      playground_elt;                         (* ← on place le conteneur partagé *)
+      div ~a:[ a_class ["hospital"] ] [];
+    ];
+  ])
+
 let () =
   H42n42_app.register
     ~service:main_service
     (fun () () ->
+       (* lancer play() côté client au chargement *)
+       let _ = [%client (play () : unit)] in
        Lwt.return
          (Eliom_tools.F.html
             ~title:"h42n42"
             ~css:[["css"; "h42n42.css"]]
-            Html.F.(body [
-              h1 [txt "h42n42"];
-              div ~a:[ a_class ["gameboard"]] [
-                div ~a:[ a_class ["river"] ] [];
-                div ~a:[ a_class ["playground"] ] [];
-                div ~a:[ a_class ["hospital"] ] [];
-              ];
-            ])))
+            page))
