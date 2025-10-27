@@ -2,7 +2,6 @@
 open Eliom_content
 open Html.D
 
-(* Conteneur PARTAGÉ où s'affichent les creets *)
 let elt = div ~a:[ a_class [ "playground" ] ] []
 ]
 
@@ -11,7 +10,7 @@ open Js_of_ocaml
 open Eliom_content
 open Html.D
 
-let () = Firebug.console##log (Js.string "Playground: client bundle chargé")
+let () = Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "Playground: client bundle chargé")
 
 type playground_state = {
   mutable iter : int;
@@ -23,12 +22,13 @@ let _add_creet (pg : playground_state) =
   let c = Creet.create pg.global_speed in
   Html.Manip.appendChild ~%elt c.elt;
   pg.creets <- c :: pg.creets;
-  Firebug.console##log (Js.string "creet ajouté")
+  Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "creet ajouté")
 
 let play () =
-  Firebug.console##log (Js.string "play démarré");
+  Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "play démarré");
   Random.self_init ();
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
   for _ = 1 to 3 do _add_creet pg done;
-  Firebug.console##log (Js.string (Printf.sprintf "play terminé (%d creets)" (List.length pg.creets)))
+  Js_of_ocaml.Firebug.console##log
+    (Js_of_ocaml.Js.string (Printf.sprintf "play terminé (%d creets)" (List.length pg.creets)))
 ]
