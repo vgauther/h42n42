@@ -17,7 +17,7 @@ let main_service =
     ~path:(Eliom_service.Path [])
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
-
+[%% client]
 (* -------------------------- *)
 (* Types de jeu               *)
 (* -------------------------- *)
