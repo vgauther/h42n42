@@ -52,3 +52,6 @@ body {
 .creets-counter {
     padding: 15px;
 }
+
+.creet { width: 16px; height: 16px; background: red; display: inline-block; }
+
