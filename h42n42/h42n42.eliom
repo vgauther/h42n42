@@ -20,7 +20,7 @@ let page =
     h1 [ txt "h42n42" ];
     div ~a:[ a_class [ "gameboard" ] ] [
       div ~a:[ a_class [ "river" ] ] [];
-      Playground.elt;  (* conteneur partagé inséré dans la page *)
+      Playground.elt;
       div ~a:[ a_class [ "hospital" ] ] [];
     ];
   ])
@@ -29,7 +29,7 @@ let () =
   H42n42_app.register
     ~service:main_service
     (fun () () ->
-       (* Force l’inclusion du JS client et lance play() dans le navigateur *)
+       (* force l’inclusion du JS client + lance play() *)
        let _ = [%client (Playground.play () : unit)] in
        Lwt.return
          (Eliom_tools.F.html
