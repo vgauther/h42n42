@@ -42,4 +42,5 @@ let play () =
   Random.self_init ();
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
   for _ = 1 to 3 do _add_creet pg done
+
 ]
