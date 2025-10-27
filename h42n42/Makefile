@@ -14,6 +14,9 @@ SERVER_PACKAGES += eliom.server tyxml lwt
 # Paquets client : AJOUTE bigstringaf ici
 CLIENT_PACKAGES += eliom.client tyxml js_of_ocaml js_of_ocaml.lwt bigstringaf
 
+OCAMLFIND := $(shell opam var bin)/ocamlfind
+
+
 ##----------------------------------------------------------------------
 ##			      Internals
 
