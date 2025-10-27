@@ -15,7 +15,7 @@ type creet = {
   mutable left : float;
   mutable state : creet_state;
 }
-]
+(**)]
 
 [%%client
 open Js_of_ocaml
@@ -43,4 +43,4 @@ let play () =
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
   for _ = 1 to 3 do _add_creet pg done
 
-]
+(**)]
