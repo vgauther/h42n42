@@ -35,7 +35,7 @@ type playground_state = {
 let _add_creet (pg : playground_state) =
   let c = Creet.create pg.global_speed in
   Html.Manip.appendChild ~%elt c.elt;   (* ~% OK car on est en [%client] *)
-  pg.creets <- c :: pg.creets
+  pg.creets <- c :: pg.creets;
   Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "creet ajouté");
 
 
