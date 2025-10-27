@@ -46,6 +46,6 @@ let _add_creet (pg : playground_state) =
 let play () =
   Random.self_init ();
   let pg = { iter = 0; global_speed = ref 0.; creets = [] } in
-  for _ = 1 to 3 do _add_creet pg done;
+  for _ = 1 to 4 do _add_creet pg done;
   Js_of_ocaml.Firebug.console##log (Js_of_ocaml.Js.string "play lancé");
 ]
