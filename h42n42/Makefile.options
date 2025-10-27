@@ -62,3 +62,13 @@ DATADIR := var/data/${PROJECT_NAME}
 STATICDIR := var/www/${PROJECT_NAME}/static
 # Project's JavaScript file
 ELIOMSTATICDIR := var/www/${PROJECT_NAME}/eliom
+
+# Paquets SERVEUR
+SERVER_PACKAGES += eliom.server tyxml lwt
+
+# Paquets CLIENT (JAVASCRIPT)
+CLIENT_PACKAGES += eliom.client tyxml js_of_ocaml js_of_ocaml.lwt
+
+# IMPORTANT : ne mets PAS lwt.unix, httpaf, angstrom, bigstringaf côté client
+#CLIENT_PACKAGES += lwt.unix httpaf angstrom bigstringaf   # ← A NE PAS FAIRE
+
