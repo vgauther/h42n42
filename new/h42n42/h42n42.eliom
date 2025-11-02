@@ -26,7 +26,7 @@ let main_service =
 
 (* Élément placeholder manipulé côté client *)
 let playground_elt =
-  Html.D.div ~a:[ Html.D.a_class "playground" ] []
+  Html.D.div ~a:[ Html.D.a_class [ "playground" ]] []
 
 (* Corps de page *)
 let body_content =
