@@ -16,25 +16,24 @@ let main_service =
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
-(* Contenu du body : liste d'éléments Html.D *)
-let body_content =
-  Html.D.
-    [ h1 [ pcdata "h42n42" ];
-      div ~a:[ a_class [ "gameboard" ] ] [
-        div ~a:[ a_class [ "river" ] ] [];
-        Playground.elt; (* Assure-toi que Playground.elt est bien un Html.D.elt *)
-        div ~a:[ a_class [ "hospital" ] ] [];
-      ];
-    ]
+(* Corps de page : un élément <body>, pas une liste *)
+let body_content : Html.D.elt =
+  Html.D.body [
+    Html.D.h1 [ Html.D.txt "h42n42" ];
+    Html.D.div ~a:[ Html.D.a_class [ "gameboard" ] ] [
+      Html.D.div ~a:[ Html.D.a_class [ "river" ] ] [];
+      Playground.elt;  (* Doit être de type Html.D.elt *)
+      Html.D.div ~a:[ Html.D.a_class [ "hospital" ] ] [];
+    ];
+  ]
 
 let () =
   H42n42_app.register
     ~service:main_service
     (fun () () ->
-       (* force l’inclusion du JS client + lance play() *)
        let _ = [%client (Playground.play () : unit)] in
        Lwt.return
-         (Tools.D.html               (* Variante D, cohérente avec Html.D *)
+         (Tools.D.html
             ~title:"h42n42"
             ~css:[ ["css"; "h42n42.css"] ]
             body_content))
