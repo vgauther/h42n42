@@ -3,15 +3,7 @@ module Html  = Eliom_content.Html
 module Tools = Eliom_tools
 ]
 
-[%%client
-module Playground = struct
-  (* Initialisation côté client, appelée depuis le serveur via [%client]. *)
-  let play () : unit = ()
-end
-]
-
 [%%server
-
 module H42n42_app =
   Eliom_registration.App(struct
     let application_name = "h42n42"
@@ -24,17 +16,12 @@ let main_service =
     ~meth:(Eliom_service.Get Eliom_parameter.unit)
     ()
 
-(* Élément placeholder manipulé côté client *)
-let playground_elt =
-  Html.D.div ~a:[ Html.D.a_class [ "playground" ]] []
-
-(* Corps de page *)
 let body_content =
   Html.D.body [
     Html.D.h1 [ Html.D.txt "h42n42" ];
     Html.D.div ~a:[ Html.D.a_class [ "gameboard" ] ] [
       Html.D.div ~a:[ Html.D.a_class [ "river" ] ] [];
-      playground_elt;
+      Playground.elt;  (* IMPORTANT: élément partagé, identique côté client *)
       Html.D.div ~a:[ Html.D.a_class [ "hospital" ] ] [];
     ];
   ]
@@ -43,10 +30,11 @@ let () =
   H42n42_app.register
     ~service:main_service
     (fun () () ->
+       (* Injection explicite du code client + exécution *)
        let _ = [%client (Playground.play () : unit)] in
        Lwt.return
          (Tools.D.html
             ~title:"h42n42"
-            ~css:[ ["css"; "h42n42.css"] ]
+            ~css:[ ["css"; "h42n42.css"] ]   (* attendu sous static/css/h42n42.css *)
             body_content))
 ]
