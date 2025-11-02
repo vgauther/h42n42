@@ -7,6 +7,8 @@ module Html = Eliom_content.Html
 let elt = Html.D.div ~a:[ Html.D.a_class [ "playground" ] ] []
 
 [%%client]
+open Js_of_ocaml
+
 let log (s : string) = Js_of_ocaml.Js.log s
 
 [%%client]
