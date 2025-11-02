@@ -14,7 +14,7 @@ let log (s : string) = Js_of_ocaml.Js.log s
 let make_creet () =
   Html.D.div ~a:[ Html.D.a_class [ "creet" ] ] []
 
-[%%client]
+[%%client
 let play () =
   log "Playground: play() start";
   let parent = ~%elt in              (* récupère le nœud DOM réel associé à elt *)
@@ -22,3 +22,4 @@ let play () =
     Html.Manip.appendChild parent (make_creet ())
   done;
   log "Playground: play() end"
+]
