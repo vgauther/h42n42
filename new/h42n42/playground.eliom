@@ -6,9 +6,8 @@ module Html = Eliom_content.Html
 [%%shared]
 let elt = Html.D.div ~a:[ Html.D.a_class [ "playground" ] ] []
 
-[%%client
+[%%client]
 let log (s : string) = Js_of_ocaml.Js.log s
-]
 
 [%%client]
 let make_creet () =
@@ -17,7 +16,7 @@ let make_creet () =
 [%%client
 let play () =
   log "Playground: play() start";
-  let parent = ~%elt in              (* récupère le nœud DOM réel associé à elt *)
+  let parent = ~%elt in
   for _i = 1 to 12 do
     Html.Manip.appendChild parent (make_creet ())
   done;

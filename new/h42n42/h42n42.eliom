@@ -21,7 +21,7 @@ let body_content =
     Html.D.h1 [ Html.D.txt "h42n42" ];
     Html.D.div ~a:[ Html.D.a_class [ "gameboard" ] ] [
       Html.D.div ~a:[ Html.D.a_class [ "river" ] ] [];
-      Playground.elt;  (* IMPORTANT: élément partagé, identique côté client *)
+      Playground.elt;  (* élément partagé, identique côté client *)
       Html.D.div ~a:[ Html.D.a_class [ "hospital" ] ] [];
     ];
   ]
@@ -30,11 +30,10 @@ let () =
   H42n42_app.register
     ~service:main_service
     (fun () () ->
-       (* Injection explicite du code client + exécution *)
-       let _ = [%client (playground.play () : unit)] in
+       let _ = [%client (Playground.play () : unit)] in
        Lwt.return
          (Tools.D.html
             ~title:"h42n42"
-            ~css:[ ["css"; "h42n42.css"] ]   (* attendu sous static/css/h42n42.css *)
+            ~css:[ ["css"; "h42n42.css"] ]   (* fichier attendu sous static/css/h42n42.css *)
             body_content))
 ]
