@@ -1,7 +1,6 @@
 [%%server
 open Eliom_lib
-open Eliom_content
-open Html.D
+
 
 module H42n42_app =
   Eliom_registration.App(struct
