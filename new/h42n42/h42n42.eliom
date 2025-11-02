@@ -31,7 +31,7 @@ let () =
     ~service:main_service
     (fun () () ->
        (* Injection explicite du code client + exécution *)
-       let _ = [%client (Playground.play () : unit)] in
+       let _ = [%client (playground.play () : unit)] in
        Lwt.return
          (Tools.D.html
             ~title:"h42n42"
