@@ -1,5 +1,0 @@
-Oct 25 23:07:25: ocsigen:main: Command pipe created
-Oct 25 23:07:25: ocsigen:ocsipersist:dbm: Initializing ...
-Oct 25 23:07:25: ocsigen:ocsipersist:dbm: Launching a new Ocsidbm process: ocsidbm on directory local/var/data/h42n42/ocsipersist.
-Oct 25 23:07:26: ocsigen:ocsipersist:dbm: ...Initialization complete
-Oct 25 23:07:27: ocsigen:config: While parsing config file, tag <host>: No defaulthostname, assuming it is "vbox.lan"
