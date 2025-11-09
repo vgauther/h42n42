@@ -8,34 +8,27 @@ open Eliom_content.Html.D
 open Eliom_content.Html.To_dom
 
 
-let spawn_interval_ms = 500      (* un creet toutes les 1000 ms *)
+let spawn_interval_ms = 13500
 let creet_size_px = 15
-let creet_speed = 1.0             (* pour plus tard *)
-let () = Random.self_init ()      (* init RNG *)
+let creet_speed = 1.0             
 let river_ratio = 0.05
 let hospital_ratio = 0.05
+let contamination_probability = 0.02
 
-type creet_kind = Healthy | Sick | Berserk | Mean
+let () = Random.self_init ()
 
-type creet = {
-    mutable id : int;
-    mutable kind : creet_kind;
-    mutable speed : float;
-    mutable pos_x : float;
-    mutable pos_y : float;
-    mutable dir : float;  (* angle en radians *)
-}
-
-type game_state = {
-    mutable duration : int; (* current timestamp in ms *)
-    mutable started_at_timestamp : int; (* game start timestamp in ms *)
-    mutable last_time_creet_spawn : int; (* since when the last creet was spawned *)
-    mutable last_time_speed_increase : int; (* since when the speed was increased *)
-    mutable speed : float;
-    mutable nb_healthy_creet : int;
-    mutable creets : creet list;
-    mutable playing : bool;
-}
+(* state global *)
+let game_state =
+  ref {
+    duration = 0;
+    started_at_timestamp = 0;
+    last_time_creet_spawn = 0;
+    last_time_speed_increase = 0;
+    speed = 1.;
+    nb_healthy_creet = 0;
+    creets = [];
+    playing = false;
+  }
 
   (* simple compteur d'id *)
 let next_creet_id = ref 0
@@ -44,11 +37,13 @@ let gen_creet_id () =
   incr next_creet_id;
   id
 
+let creet_dom_id (c : creet) =
+  Printf.sprintf "creet-%d" c.id
+
 let get_window_size () =
   let width = float_of_int Dom_html.window##.innerWidth in
   let height = float_of_int Dom_html.window##.innerHeight in
   (width, height)
-
 
 let random_position () : float * float =
   let w, h = get_window_size () in
@@ -73,46 +68,44 @@ let random_position () : float * float =
   let x = Random.float max_x in
   (x, y)
 
-let create_creet () : creet =
-    let x, y = random_position () in
-    let angle = Random.float (2. *. Float.pi) in
-    {
-        id = gen_creet_id ();
-        kind = Healthy;
-        speed = creet_speed;
-        pos_x = x;
-        pos_y = y;
-        dir = angle;
-    }
+let remove_all_creets_dom () =
+  let doc = Dom_html.document in
+  List.iter (fun c ->
+    let id = Js.string (creet_dom_id c) in
+    let div_opt = doc##getElementById id in
+    Js.Opt.iter div_opt (fun div ->
+      Js.Opt.iter div##.parentNode (fun parent ->
+        Dom.removeChild parent div
+      )
+    )
+  ) (!game_state).creets
 
-let create_creet_div (c : creet) : unit =
-  let div = Dom_html.createDiv Dom_html.document in
-  div##.id := Js.string (Printf.sprintf "creet-%d" c.id);
+let now () : int =
+  let js_value = Js.Unsafe.eval_string "Date.now()" in
+  let time_float = Js.float_of_number js_value in
+  let time_int = int_of_float time_float in
+  time_int
 
-  (* style de base : vert, carré, position absolue *)
-  div##.style##.position := Js.string "absolute";
-  div##.style##.width := Js.string (Printf.sprintf "%dpx" creet_size_px);
-  div##.style##.height := Js.string (Printf.sprintf "%dpx" creet_size_px);
-  div##.style##.backgroundColor := Js.string "green";
+let init_game_state () =
+  let t = now () in
+  game_state := {
+    duration = 0;
+    started_at_timestamp = t;
+    last_time_creet_spawn = t;
+    last_time_speed_increase = t;
+    speed = 1.;
+    nb_healthy_creet = 0;
+    creets = [];
+    playing = true;
+  };
 
-  div##.style##.left := Js.string (Printf.sprintf "%fpx" c.pos_x);
-  div##.style##.top  := Js.string (Printf.sprintf "%fpx" c.pos_y);
-
-  Dom.appendChild Dom_html.document##.body div
-
-let creet_dom_id (c : creet) =
-  Printf.sprintf "creet-%d" c.id
-
-let update_creet_div (c : creet) : unit =
-  let id = Js.string (creet_dom_id c) in
-  let div_opt = Dom_html.document##getElementById id in
-
-  (* Js.Opt.iter applique la fonction seulement si la valeur existe *)
-  Js.Opt.iter div_opt (fun div ->
-    let style = div##.style in
-    style##.left := Js.string (Printf.sprintf "%fpx" c.pos_x);
-    style##.top  := Js.string (Printf.sprintf "%fpx" c.pos_y);
-  )
+  let gs = !game_state in
+  for _ = 1 to 10 do
+    let c = create_creet () in
+    gs.creets <- c :: gs.creets;
+    gs.nb_healthy_creet <- gs.nb_healthy_creet + 1;
+    create_creet_div c;
+  done
 
 let update_creet_position_and_bounce (c : creet) : unit =
   let w, h = get_window_size () in
@@ -161,46 +154,64 @@ let update_creet_position_and_bounce (c : creet) : unit =
   c.pos_y <- !y;
   c.dir <- !dir
 
-(* state global *)
-let game_state =
-  ref {
-    duration = 0;
-    started_at_timestamp = 0;
-    last_time_creet_spawn = 0;
-    last_time_speed_increase = 0;
-    speed = 1.;
-    nb_healthy_creet = 0;
-    creets = [];
-    playing = false;
-  }
+let check_creet_river_collision (c : creet) : unit =
+  let _, h = get_window_size () in
+  let river_bottom = h *. river_ratio in
+  let top = c.pos_y in
+  let bottom = c.pos_y +. float_of_int creet_size_px in
 
-let now () : int =
-  let js_value = Js.Unsafe.eval_string "Date.now()" in
-  let time_float = Js.float_of_number js_value in
-  let time_int = int_of_float time_float in
-  time_int
+  if c.kind = Healthy
+     && top <= river_bottom
+     && bottom >= 0.
+  then begin
+    c.kind <- Sick;
+    c.speed <- c.speed *. 0.85;
+    let gs = !game_state in
+    if gs.nb_healthy_creet > 0 then
+      gs.nb_healthy_creet <- gs.nb_healthy_creet - 1;
+  end
 
-let spawn_creet () : unit =
-  let c = create_creet () in
-  let gs = !game_state in
-  gs.creets <- c :: gs.creets;
-  gs.nb_healthy_creet <- gs.nb_healthy_creet + 1;
-  create_creet_div c;
-  Js_of_ocaml.Firebug.console##log
-    (Js.string (Printf.sprintf "Spawn creet id=%d" c.id))
+let infect_creet (c : creet) : unit =
+  if c.kind = Healthy then begin
+    c.kind <- Sick;
+    c.speed <- c.speed *. 0.85;
+    let gs = !game_state in
+    if gs.nb_healthy_creet > 0 then
+      gs.nb_healthy_creet <- gs.nb_healthy_creet - 1;
+  end
 
-let init_game_state () =
-  let t = now () in
-  game_state := {
-    duration = 0;
-    started_at_timestamp = t;
-    last_time_creet_spawn = t;
-    last_time_speed_increase = t;
-    speed = 1.;
-    nb_healthy_creet = 0;
-    creets = [];
-    playing = true;
-  }
+let check_creet_pair_infection (c1 : creet) (c2 : creet) : unit =
+  if creets_overlap c1 c2 then
+    match c1.kind, c2.kind with
+    | Sick, Healthy ->
+        if Random.float 1.0 < contamination_probability then
+          infect_creet c2
+    | Healthy, Sick ->
+        if Random.float 1.0 < contamination_probability then
+          infect_creet c1
+    | _ ->
+        ()
+
+let handle_creets_collisions () : unit =
+  let rec aux = function
+    | [] -> ()
+    | c :: rest ->
+        List.iter (fun other -> check_creet_pair_infection c other) rest;
+        aux rest
+  in
+  aux (!game_state).creets
+
+let update_creet_div (c : creet) : unit =
+  let id = Js.string (creet_dom_id c) in
+  let div_opt = Dom_html.document##getElementById id in
+  Js.Opt.iter div_opt (fun div ->
+    let style = div##.style in
+    style##.left := Js.string (Printf.sprintf "%fpx" c.pos_x);
+    style##.top  := Js.string (Printf.sprintf "%fpx" c.pos_y);
+    style##.backgroundColor := Js.string (color_of_kind c.kind);
+  )
+
+let game_over_panel_id = "game-over-panel"
 
 let rec game_loop () : unit Lwt.t =
     if not (!game_state).playing then (
@@ -223,14 +234,86 @@ let rec game_loop () : unit Lwt.t =
         );
 
         List.iter (fun c ->
-            update_creet_position_and_bounce c;
-            update_creet_div c
+        update_creet_position_and_bounce c;
+        check_creet_river_collision c;
         ) gs.creets;
 
-        (* On attend 16 millisecondes (~60 FPS) *)
-        Lwt_js.sleep 0.016 >>= fun () ->
-        game_loop ()
+        handle_creets_collisions ();
+
+        List.iter update_creet_div gs.creets;
+        if gs.nb_healthy_creet = 0 && gs.playing && gs.creets <> [] then begin
+            gs.playing <- false;
+            show_game_over_panel ();
+            Lwt.return_unit
+        end else
+            Lwt_js.sleep 0.016 >>= fun () ->
+            game_loop ()
     )
+
+and show_game_over_panel () =
+  let doc = Dom_html.document in
+
+  let existing = doc##getElementById (Js.string game_over_panel_id) in
+  if Js.Opt.test existing then ()
+  else
+    let overlay = Dom_html.createDiv doc in
+    overlay##.id := Js.string game_over_panel_id;
+
+    let style = overlay##.style in
+    style##.position := Js.string "fixed";
+    style##.left := Js.string "0";
+    style##.top := Js.string "0";
+    style##.width := Js.string "100%";
+    style##.height := Js.string "100%";
+    style##.backgroundColor := Js.string "rgba(0,0,0,0.7)";
+    style##.display := Js.string "flex";
+    (* propriétés flex via setProperty *)
+    style##setProperty
+        (Js.string "justify-content")
+        (Js.string "center")
+        Js.Optdef.empty;
+
+    style##setProperty
+        (Js.string "align-items")
+        (Js.string "center")
+        Js.Optdef.empty;
+    style##.zIndex := Js.string "9999";
+
+    let box = Dom_html.createDiv doc in
+    let bstyle = box##.style in
+    bstyle##.backgroundColor := Js.string "#ffffff";
+    bstyle##.padding := Js.string "20px 40px";
+    bstyle##.borderRadius := Js.string "8px";
+    bstyle##.textAlign := Js.string "center";
+
+    let title = Dom_html.createDiv doc in
+    title##.innerHTML := Js.string "Game Over";
+
+    let btn = Dom_html.createButton doc in
+    btn##.innerHTML := Js.string "Rejouer";
+
+    btn##.onclick := Dom_html.handler (fun _ ->
+    (* supprime tous les creets du DOM *)
+    remove_all_creets_dom ();
+
+    (* supprime le panneau s'il existe *)
+    let overlay_opt = doc##getElementById (Js.string game_over_panel_id) in
+    Js.Opt.iter overlay_opt (fun o ->
+        Js.Opt.iter o##.parentNode (fun parent ->
+        Dom.removeChild parent o
+        )
+    );
+
+    (* reset et relance *)
+    init_game_state ();
+    Lwt.async (fun () -> game_loop ());
+    Js._false
+    );
+
+    Dom.appendChild box title;
+    Dom.appendChild box btn;
+    Dom.appendChild overlay box;
+    Dom.appendChild doc##.body overlay
 
 let () =  
     Dom_html.window##.onload := Dom_html.handler (fun _ ->
