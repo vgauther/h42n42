@@ -1,4 +1,11 @@
 [%%client
+open Js_of_ocaml
+open Lwt
+open Lwt.Infix
+open Js_of_ocaml_lwt
+open Eliom_content.Html
+open Eliom_content.Html.D
+open Eliom_content.Html.To_dom
 
 type creet_kind = Healthy | Sick | Berserk | Mean
 

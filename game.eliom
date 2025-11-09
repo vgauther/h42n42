@@ -6,7 +6,8 @@ open Js_of_ocaml_lwt
 open Eliom_content.Html
 open Eliom_content.Html.D
 open Eliom_content.Html.To_dom
-
+open Struct
+open Creets
 
 let spawn_interval_ms = 13500
 let creet_size_px = 15
@@ -200,16 +201,6 @@ let handle_creets_collisions () : unit =
         aux rest
   in
   aux (!game_state).creets
-
-let update_creet_div (c : creet) : unit =
-  let id = Js.string (creet_dom_id c) in
-  let div_opt = Dom_html.document##getElementById id in
-  Js.Opt.iter div_opt (fun div ->
-    let style = div##.style in
-    style##.left := Js.string (Printf.sprintf "%fpx" c.pos_x);
-    style##.top  := Js.string (Printf.sprintf "%fpx" c.pos_y);
-    style##.backgroundColor := Js.string (color_of_kind c.kind);
-  )
 
 let game_over_panel_id = "game-over-panel"
 

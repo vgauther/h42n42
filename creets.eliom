@@ -1,4 +1,13 @@
 [%%client
+open Struct  (* importe creet, creet_kind, etc. *)
+open Js_of_ocaml
+open Lwt
+open Lwt.Infix
+open Js_of_ocaml_lwt
+open Eliom_content.Html
+open Eliom_content.Html.D
+open Eliom_content.Html.To_dom
+open Game
 
 let create_creet_div (c : creet) : unit =
   let div = Dom_html.createDiv Dom_html.document in
