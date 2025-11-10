@@ -565,6 +565,14 @@ and show_game_over_panel () =
     let title = Dom_html.createDiv doc in
     title##.innerHTML := Js.string "Game Over";
 
+    (* === ICI : titre avec durée === *)
+    let gs = !game_state in
+    let seconds = gs.duration / 1000 in
+    let title = Dom_html.createDiv doc in
+    title##.innerHTML :=
+      Js.string (Printf.sprintf "Game Over<br/>Temps de survie : %ds" seconds);
+    (* =============================== *)
+
     let btn = Dom_html.createButton doc in
     btn##.innerHTML := Js.string "Rejouer";
 
@@ -591,7 +599,7 @@ and show_game_over_panel () =
 let () =  
     Dom_html.window##.onload := Dom_html.handler (fun _ ->
         Js_of_ocaml.Firebug.console##log (Js.string "Hello depuis OCaml !");
-        init_game_state ();
+        init_game_state ();              
         Lwt.async (fun () -> game_loop ());
         Js._false
     )
