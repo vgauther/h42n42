@@ -15,8 +15,8 @@ let hospital_ratio = 0.05
 let contamination_probability = 0.02
 let berserk_probability = 0.10
 let mean_probability = 0.10
-let berserk_growth_duration = 10000.0  (* ms pour atteindre x4 taille *)
-let speed_increase_interval_ms = 10000      (* tous les 10s par ex. *)
+let berserk_growth_duration = 10000.0  
+let speed_increase_interval_ms = 10000      
 let speed_increase_factor = 1.20  
 
 
@@ -40,21 +40,20 @@ type creet = {
   mutable size : float;
   mutable base_size : float;
   mutable infected_at : int;
-  mutable grabbed : bool;  (* nouveau : si attrapé par le joueur *)
+  mutable grabbed : bool;   
 }
 
 type game_state = {
-    mutable duration : int; (* current timestamp in ms *)
-    mutable started_at_timestamp : int; (* game start timestamp in ms *)
-    mutable last_time_creet_spawn : int; (* since when the last creet was spawned *)
-    mutable last_time_speed_increase : int; (* since when the speed was increased *)
+    mutable duration : int; 
+    mutable started_at_timestamp : int; 
+    mutable last_time_creet_spawn : int; 
+    mutable last_time_speed_increase : int; 
     mutable speed : float;
     mutable nb_healthy_creet : int;
     mutable creets : creet list;
     mutable playing : bool;
 }
 
-(* state global *)
 let game_state =
   ref {
     duration = 0;
@@ -67,7 +66,6 @@ let game_state =
     playing = false;
   }
 
-  (* simple compteur d'id *)
 let next_creet_id = ref 0
 let gen_creet_id () =
   let id = !next_creet_id in
@@ -86,8 +84,8 @@ let random_position () : float * float =
   let w, h = get_window_size () in
   let creet_size = float_of_int creet_size_px in
 
-  let river_bottom = h *. river_ratio in              (* fin de la rivière *)
-  let hospital_top = h *. (1. -. hospital_ratio) in  (* début de l'hôpital *)
+  let river_bottom = h *. river_ratio in
+  let hospital_top = h *. (1. -. hospital_ratio) in
 
   let max_x = max 0. (w -. creet_size) in
 
@@ -96,7 +94,6 @@ let random_position () : float * float =
 
   let y =
     if max_y <= min_y then
-      (* cas extrême: plus de place, on le met au milieu *)
       h /. 2.
     else
       min_y +. Random.float (max_y -. min_y)
@@ -131,7 +128,7 @@ let create_creet () : creet =
   {
     id = gen_creet_id ();
     kind = Healthy;
-    speed = creet_speed *. gs.speed;  (* tient compte de la vitesse globale *)
+    speed = creet_speed *. gs.speed;
     pos_x = x;
     pos_y = y;
     dir = angle;
@@ -143,9 +140,7 @@ let create_creet () : creet =
 
 let apply_speed_increase () =
   let gs = !game_state in
-  (* facteur global *)
   gs.speed <- gs.speed *. speed_increase_factor;
-  (* on applique aussi aux creets déjà présents *)
   List.iter
     (fun (c : creet) ->
       c.speed <- c.speed *. speed_increase_factor)
@@ -193,7 +188,7 @@ let update_mean_direction (c : creet) : unit =
       c.dir <- atan2 !best_dy !best_dx
   end
 
-let random_dir_change_probability = 0.002  (* faible proba par tick *)
+let random_dir_change_probability = 0.002  
 let maybe_change_direction (c : creet) =
   if c.kind <> Mean then
     if Random.float 1.0 < random_dir_change_probability then
@@ -204,16 +199,11 @@ let update_creet_position_and_bounce (c : creet) : unit =
     let max_x = max 0. (w -. c.size) in
     let max_y = max 0. (h -. c.size) in
 
-    (* déplacement selon l'angle *)
     let dx = cos c.dir *. c.speed in
     let dy = sin c.dir *. c.speed in
     let new_x = c.pos_x +. dx in
     let new_y = c.pos_y +. dy in
 
-    (* on fait rebondir sur les bords :
-        - bord gauche/droite -> on inverse l'angle horizontal (pi -. dir)
-        - bord haut/bas      -> on inverse l'angle vertical (-. dir)
-    *)
     let x = ref new_x in
     let y = ref new_y in
     let dir = ref c.dir in
@@ -321,11 +311,9 @@ let setup_drag_and_drop (c : creet) : unit =
             Lwt.return_unit
           else
             Lwt.pick [
-              (* Relâchement *)
               (Lwt_js_events.mouseup doc >>= fun _ ->
                 Lwt.return `Up);
 
-              (* Mouvement souris *)
               (Lwt_js_events.mousemove doc >>= fun mev ->
                 if !dragging then begin
                   let mx = float_of_int mev##.clientX in
@@ -334,7 +322,6 @@ let setup_drag_and_drop (c : creet) : unit =
                   c.pos_x <- mx -. !offset_x;
                   c.pos_y <- my -. !offset_y;
 
-                  (* Clamp dans la fenêtre *)
                   let w, h = get_window_size () in
                   if c.pos_x < 0. then c.pos_x <- 0.;
                   if c.pos_y < 0. then c.pos_y <- 0.;
@@ -351,7 +338,6 @@ let setup_drag_and_drop (c : creet) : unit =
                 dragging := false;
                 c.grabbed <- false;
 
-                (* Si déposé dans l'hôpital ET malade -> guéri *)
                 if is_in_hospital c then
                   heal_creet c;
 
@@ -391,7 +377,7 @@ let update_berserk (c : creet) : unit =
         else if t > 1. then 1.
         else t
       in
-      let factor = 1.0 +. 3.0 *. clamped in   (* de 1x à 4x *)
+      let factor = 1.0 +. 3.0 *. clamped in
       c.size <- c.base_size *. factor
     end
   end
@@ -436,9 +422,11 @@ let check_creet_pair_infection (c1 : creet) (c2 : creet) : unit =
 let handle_creet_collisions_for (c : creet) : unit =
   let gs = !game_state in
   let rec aux lst =
-    match lst with
-    | [] -> ()
-    | other :: tl ->
+    if lst = [] then
+      ()
+    else
+      let other = List.hd lst in
+      let tl = List.tl lst in
       if other.id <> c.id then
         check_creet_pair_infection c other;
       aux tl
@@ -452,7 +440,6 @@ let rec creet_loop (c : creet) : unit Lwt.t =
     then
       Lwt.return_unit
     else begin
-      (* si pas attrapé par le joueur, le thread contrôle le mouvement *)
       if not c.grabbed then begin
         update_mean_direction c;
         maybe_change_direction c;
@@ -516,14 +503,12 @@ let rec game_loop () : unit Lwt.t =
 
     gs.duration <- current_time - gs.started_at_timestamp;
 
-    (* spawn périodique *)
     let since_last_spawn = current_time - gs.last_time_creet_spawn in
     if since_last_spawn >= spawn_interval_ms then (
       spawn_creet ();
       gs.last_time_creet_spawn <- current_time;
     );
 
-    (* accélération progressive *)
     let since_last_speed_increase =
       current_time - gs.last_time_speed_increase
     in
@@ -532,7 +517,6 @@ let rec game_loop () : unit Lwt.t =
       gs.last_time_speed_increase <- current_time;
     );
 
-    (* condition de fin *)
     if gs.nb_healthy_creet = 0 && gs.creets <> [] then begin
       gs.playing <- false;
       show_game_over_panel ();
@@ -560,7 +544,6 @@ and show_game_over_panel () =
     style##.height := Js.string "100%";
     style##.backgroundColor := Js.string "rgba(0,0,0,0.7)";
     style##.display := Js.string "flex";
-    (* propriétés flex via setProperty *)
     style##setProperty
         (Js.string "justify-content")
         (Js.string "center")
@@ -586,10 +569,8 @@ and show_game_over_panel () =
     btn##.innerHTML := Js.string "Rejouer";
 
     btn##.onclick := Dom_html.handler (fun _ ->
-    (* supprime tous les creets du DOM *)
     remove_all_creets_dom ();
 
-    (* supprime le panneau s'il existe *)
     let overlay_opt = doc##getElementById (Js.string game_over_panel_id) in
     Js.Opt.iter overlay_opt (fun o ->
         Js.Opt.iter o##.parentNode (fun parent ->
@@ -597,7 +578,6 @@ and show_game_over_panel () =
         )
     );
 
-    (* reset et relance *)
     init_game_state ();
     Lwt.async (fun () -> game_loop ());
     Js._false
@@ -611,7 +591,7 @@ and show_game_over_panel () =
 let () =  
     Dom_html.window##.onload := Dom_html.handler (fun _ ->
         Js_of_ocaml.Firebug.console##log (Js.string "Hello depuis OCaml !");
-        init_game_state ();               (* initialise l’état du jeu *)
+        init_game_state ();
         Lwt.async (fun () -> game_loop ());
         Js._false
     )
